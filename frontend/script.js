@@ -1,91 +1,64 @@
-// DOM Elementlerini Seçme
-const shopeeKeywordInput = document.getElementById('shopeeKeyword');
-const analyzeShopeeBtn = document.getElementById('analyzeShopeeBtn');
-const shopeeLoader = document.getElementById('shopeeLoader');
-const shopeeResultsTable = document.getElementById('shopeeResultsTable');
+const API_BASE_URL = '';
 
-const fetchShopifyBtn = document.getElementById('fetchShopifyBtn');
-const shopifyLoader = document.getElementById('shopifyLoader');
-const shopifyResultsTable = document.getElementById('shopifyResultsTable');
+const listingIdInput = document.getElementById('listingId');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const loader = document.getElementById('loader');
+const resultsContainer = document.getElementById('resultsContainer');
 
-// Backend sunucumuzun adresi (Şu an yerel bilgisayarımızda çalışıyor)
-const API_BASE_URL = 'http://127.0.0.1:5001';
+analyzeBtn.addEventListener('click', handleAnalysis);
 
-// Olay Dinleyicileri (Event Listeners)
-analyzeShopeeBtn.addEventListener('click', handleShopeeAnalysis);
-fetchShopifyBtn.addEventListener('click', handleShopifyFetch);
-
-// --- Shopee Analiz Fonksiyonu (GERÇEK) ---
-async function handleShopeeAnalysis() {
-    const keyword = shopeeKeywordInput.value.trim();
-    if (!keyword) {
-        alert('Please enter a keyword to analyze.');
+async function handleAnalysis() {
+    const listing_id = listingIdInput.value.trim();
+    if (!listing_id) {
+        alert('Please provide a Listing ID.');
         return;
     }
 
-    shopeeLoader.classList.remove('hidden');
-    shopeeResultsTable.classList.add('hidden');
-    shopeeResultsTable.querySelector('tbody').innerHTML = '';
+    loader.classList.remove('hidden');
+    resultsContainer.innerHTML = '';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/analyze-shopee`, {
+        const response = await fetch(`${API_BASE_URL}/get-listing-details`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ keyword: keyword })
+            body: JSON.stringify({ listing_id: listing_id })
         });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
         const data = await response.json();
-        populateTable(shopeeResultsTable, data, ['name', 'price', 'sales']);
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        displayResults(data);
 
     } catch (error) {
-        console.error('Error fetching Shopee data:', error);
-        alert('Failed to fetch data from Shopee. Check the console for details.');
+        resultsContainer.innerHTML = `<p class="error">${error.message}</p>`;
     } finally {
-        shopeeLoader.classList.add('hidden');
-        shopeeResultsTable.classList.remove('hidden');
+        loader.classList.add('hidden');
     }
 }
 
-// --- Shopify Ürün Çekme Fonksiyonu (GERÇEK) ---
-async function handleShopifyFetch() {
-    shopifyLoader.classList.remove('hidden');
-    shopifyResultsTable.classList.add('hidden');
-    shopifyResultsTable.querySelector('tbody').innerHTML = '';
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/fetch-shopify`);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        
-        const data = await response.json();
-        populateTable(shopifyResultsTable, data, ['name', 'price']);
-
-    } catch (error) {
-        console.error('Error fetching Shopify data:', error);
-        alert('Failed to fetch data from Shopify. Check the console for details.');
-    } finally {
-        shopifyLoader.classList.add('hidden');
-        shopifyResultsTable.classList.remove('hidden');
-    }
-}
-
-// Tabloyu gelen veriyle dolduran yardımcı fonksiyon (Değişiklik yok)
-function populateTable(tableElement, data, columns) {
-    const tbody = tableElement.querySelector('tbody');
-    tbody.innerHTML = ''; 
-
-    data.forEach(item => {
-        const row = document.createElement('tr');
-        columns.forEach(col => {
-            const cell = document.createElement('td');
-            cell.textContent = item[col] || '';
-            row.appendChild(cell);
-        });
-        tbody.appendChild(row);
-    });
+function displayResults(data) {
+    resultsContainer.innerHTML = `
+        <div class="result-card">
+            <div class="result-image">
+                <img src="${data.main_image_url}" alt="${data.title}" />
+            </div>
+            <div class="result-details">
+                <h3><a href="${data.url}" target="_blank">${data.title}</a></h3>
+                <p><strong>Shop:</strong> <a href="${data.shop_url}" target="_blank">${data.shop_name}</a></p>
+                <table>
+                    <tr><td><strong>Price:</strong></td><td>${data.price}</td></tr>
+                    <tr><td><strong>Stock:</strong></td><td>${data.quantity}</td></tr>
+                    <tr><td><strong>Views:</strong></td><td>${data.views}</td></tr>
+                    <tr><td><strong>Favorites:</strong></td><td>${data.num_favorers}</td></tr>
+                    <tr><td><strong>Created:</strong></td><td>${data.creation_date}</td></tr>
+                </table>
+                <p><strong>Category:</strong> ${data.category}</p>
+                <div class="tags-container">
+                    <strong>Tags:</strong>
+                    ${data.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                </div>
+            </div>
+        </div>
+    `;
 }
