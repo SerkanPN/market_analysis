@@ -3,24 +3,22 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Etsy Listing Analyzer</title>
+    <title>Shopee Store Analyzer</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Etsy Listing Analyzer 🔎</h1>
-            <p>Enter an Etsy Listing ID to pull all available data.</p>
+            <h1>Shopee Store Analyzer 📊</h1>
+            <p>Enter a Shopee Indonesia store URL to get a full analysis.</p>
         </header>
         <main>
-            <div class="module">
-                <div class="input-group">
-                    <input type="text" id="listingId" placeholder="Enter Etsy Listing ID (e.g., 1083333498)" />
-                    <button id="analyzeBtn">Analyze</button>
-                </div>
-                <div id="loader" class="loader hidden"></div>
-                <div id="resultsContainer"></div>
+            <div class="input-group">
+                <input type="text" id="storeUrl" placeholder="e.g., https://shopee.co.id/unileverindonesia" />
+                <button id="analyzeBtn">Analyze</button>
             </div>
+            <div id="loader" class="loader hidden"></div>
+            <div id="resultsContainer"></div>
         </main>
     </div>
     <script src="script.js"></script>
